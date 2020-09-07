@@ -1,0 +1,32 @@
+name: GPM4
+channels:
+  - defaults
+dependencies:
+  - blas=1.0=mkl
+  - ca-certificates=2020.7.22=0
+  - certifi=2020.6.20=py38_0
+  - intel-openmp=2019.4=233
+  - libcxx=10.0.0=1
+  - libedit=3.1.20191231=h1de35cc_1
+  - libffi=3.2.1=h0a44026_6
+  - mkl=2019.4=233
+  - mkl-service=2.3.0=py38hfbe908c_0
+  - mkl_fft=1.1.0=py38hc64f4ea_0
+  - mkl_random=1.1.1=py38h959d312_0
+  - ncurses=6.2=h0a44026_1
+  - numpy=1.19.1=py38h3b9f5b6_0
+  - numpy-base=1.19.1=py38hcfb5961_0
+  - openssl=1.1.1g=h1de35cc_0
+  - pip=20.2.2=py38_0
+  - python=3.8.0=h359304d_2
+  - readline=7.0=h1de35cc_5
+  - setuptools=49.6.0=py38_0
+  - six=1.15.0=py_0
+  - sqlite=3.33.0=hffcf06c_0
+  - tk=8.6.10=hb0a8c7a_0
+  - wheel=0.35.1=py_0
+  - xz=5.2.5=h1de35cc_0
+  - zlib=1.2.11=h1de35cc_3
+  - pip:
+    - sultan==0.9.1
+prefix: /usr/local/anaconda3/envs/GPM4

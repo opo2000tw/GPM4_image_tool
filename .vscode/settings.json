@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "/usr/local/bin/python3",
+    "python.pythonPath": "/usr/local/anaconda3/bin/python",
     "files.associations": {
         "string.h": "c"
     }
