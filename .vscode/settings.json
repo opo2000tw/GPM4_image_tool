@@ -1,6 +1,25 @@
 {
-    "python.pythonPath": "/usr/local/anaconda3/bin/python",
+    "python.pythonPath": "/usr/local/anaconda3/envs/GPM4/bin/python",
     "files.associations": {
         "string.h": "c"
-    }
+    },
+    // python
+    "python.linting.pycodestyleEnabled": false,
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.sortImports.path": "isort",
+    "terminal.integrated.inheritEnv": false,
+    "python.terminal.activateEnvironment": false,
+    "python.formatting.blackPath": "/usr/local/anaconda3/envs/GPM4/bin/black",
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--line-length",
+        "80"
+    ],
+    "editor.formatOnSave": true,
+    "terminal.external.osxExec": "iTerm.app",
+    "terminal.explorerKind": "external",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.python"
+    },
 }
