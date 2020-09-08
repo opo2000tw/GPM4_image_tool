@@ -4,6 +4,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+from PIL import Image
 import time
 
 # from PIL import Image, ImageDraw, ImageFont
@@ -60,9 +61,9 @@ def list_image_path(sub):
 
 
 @debug
-def cmd_magick_convert_array(x_size, y_size):
+def cmd_magick_convert_array(col, row):
     try:
-        size_str = str(x_size) + "x" + str(y_size)
+        size_str = str(col) + "x" + str(row)
         s = Sultan()
         # s.convert("-quality 100 -resize 500x500 le.jpg le.bmp").and_().convert(
         # "le.bmp -define h:format=rgba -depth 8 -size 500x500! rgba.h"
@@ -88,9 +89,9 @@ def cmd_magick_convert_array(x_size, y_size):
 
 
 @debug
-def np_memcpy(x=4, y=4, rgba=4, lib_str="main.so"):
-    arr_src = np.arange(x * y * rgba).astype(np.uint8)
-    arr_dest = np.empty(shape=(x, y, rgba), dtype=np.uint8)
+def np_memcpy(row=4, col=4, rgba=4, lib_str="main.so"):
+    arr_src = np.arange(row * col * rgba).astype(np.uint8)
+    arr_dest = np.empty(shape=(row, col, rgba), dtype=np.uint8)
     # print("arr_src:\n", arr_src)
     # print("arr_dest:\n", arr_dest)
     clib = ctypes.cdll.LoadLibrary("main.so")
@@ -101,7 +102,7 @@ def np_memcpy(x=4, y=4, rgba=4, lib_str="main.so"):
     ]
     clib.np_memcpy.restype = ctypes.c_void_p
     print("\ncalling clib.np_memcpy ...\n")
-    clib.np_memcpy(arr_dest, arr_src, x * y * rgba)
+    clib.np_memcpy(arr_dest, arr_src, row * col * rgba)
     print("arr_dest:\n", arr_dest)
     image_change(arr_dest)
     print("arr_dest:\n", arr_dest)
@@ -109,37 +110,37 @@ def np_memcpy(x=4, y=4, rgba=4, lib_str="main.so"):
 
 
 @debug
-def np_memcpy_fixed_rgba(x, y, rgba=4, lib_str="main.so"):
-    arr_dest = np.empty(shape=(x, y, rgba), dtype=np.uint8, order="C")
+def np_memcpy_fixed_rgba(row, col, rgba=4, lib_str="main.so"):
+    arr_dest = np.empty(shape=(row, col, rgba), dtype=np.uint8, order="C")
     clib = ctypes.cdll.LoadLibrary(lib_str)
     clib.np_memcpy_fixed_rgba.argtypes = [
         np.ctypeslib.ndpointer(dtype=np.uint8, flags="C_CONTIGUOUS", ndim=3),
         ctypes.c_size_t,
     ]
     clib.np_memcpy_fixed_rgba.restype = ctypes.c_void_p
-    clib.np_memcpy_fixed_rgba(arr_dest, x * y * rgba)
+    clib.np_memcpy_fixed_rgba(arr_dest, row * col * rgba)
     return arr_dest
 
 
 @debug
-def np_memcpy_fixed_argb(x, y, argb=4, lib_str="main.so"):
-    arr_dest = np.empty(shape=(x, y, argb), dtype=np.uint8)
+def np_memcpy_fixed_argb(row, col, argb=4, lib_str="main.so"):
+    arr_dest = np.empty(shape=(row, col, argb), dtype=np.uint8)
     clib = ctypes.cdll.LoadLibrary(lib_str)
     clib.np_memcpy_fixed_argb.argtypes = [
         np.ctypeslib.ndpointer(dtype=np.uint8, flags="C_CONTIGUOUS", ndim=3),
         ctypes.c_size_t,
     ]
     clib.np_memcpy_fixed_argb.restype = ctypes.c_void_p
-    clib.np_memcpy_fixed_argb(arr_dest, x * y * argb)
+    clib.np_memcpy_fixed_argb(arr_dest, row * col * argb)
     return arr_dest
 
 
 @debug
-def image_init(x, y, dim=3, in_name="le", in_sub="jpg"):
+def image_init(row, col, dim=3, in_name="le", in_sub="jpg"):
     np.set_printoptions(formatter={"int": hex})
     list_image_path("jpg")
-    cmd_magick_convert_array(x, y)
-    return np_memcpy_fixed_rgba(y, x)
+    cmd_magick_convert_array(row, col)
+    return np_memcpy_fixed_rgba(col, row)
 
 
 @debug
@@ -148,23 +149,15 @@ def image_change(np_arr_rgba, alpha=0xFF):
         print("image_change succes")
     else:
         print("image_change fail")
-    # Set transparency depending on x position
-    dims = np_arr_rgba.shape
-    x_size = dims[0]
-    y_size = dims[1]
-    for x in range(x_size):
-        for y in range(y_size):
-            np_arr_rgba[x, y, 0] = alpha
-            alpha -= 10
-    # # Set
-    # for x in range(100):
-    #     for y in range(100):
-    #         np_arr_rgba[y, x, 0] = np_arr_rgba[y, x, 3]
-    # print(np_arr_rgba)
+    # dims = np_arr_rgba.shape
+    # row = dims[0]
+    # col = dims[1]
+    # Set transparency depending on row and col positio
+    np_arr_rgba[0:50, 0:300, 3] = alpha
 
 
 @debug
-def image_plot(np_arr1, np_arr2):
+def arr_plot(np_arr1, np_arr2):
     plt.figure(1)
     plt.subplot(211)
     plt.imshow(np_arr1)
@@ -173,17 +166,21 @@ def image_plot(np_arr1, np_arr2):
     plt.show()
 
 
+@debug
+def image_plot(np_arr1):
+    img_org = Image.open("le.bmp").convert("RGBA")
+    np_arr1 = np.array(img_org)
+    plt.imshow(np_arr1)
+    plt.show()
+
+
 if __name__ == "__main__":
-    # This could be any command you want to execute as you were in bash
+    # m*n row major
     np_arr_rgba = image_init(300, 100, 3, "le", "jpg")
     np_arr_rgba1 = np_arr_rgba.copy()
-    print(np_arr_rgba1)
-    print(np_arr_rgba1.size)
-    image_change(np_arr_rgba, 0xFF)
+    image_change(np_arr_rgba, 0x128)
     np_arr_rgba2 = np_arr_rgba.copy()
-    print(np_arr_rgba2)
-    print(np_arr_rgba2.size)
-    image_plot(np_arr_rgba1, np_arr_rgba2)
+    arr_plot(np_arr_rgba1, np_arr_rgba2)
 
     # np_arr_rgba = np_memcpy(4, 5)
     # np_arr_rgba1 = np_arr_rgba.copy()
