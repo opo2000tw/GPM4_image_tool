@@ -1,25 +1,45 @@
 {
-    "python.pythonPath": "/usr/local/anaconda3/envs/GPM4/bin/python",
-    "files.associations": {
-        "string.h": "c"
-    },
     // python
-    "python.linting.pycodestyleEnabled": false,
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true,
-    "python.sortImports.path": "isort",
+    "python.languageServer": "Microsoft",
+    "python.pythonPath": "/usr/local/anaconda3/envs/GPM4/bin/python",
     "terminal.integrated.inheritEnv": false,
     "python.terminal.activateEnvironment": false,
-    "python.formatting.blackPath": "/usr/local/anaconda3/envs/GPM4/bin/black",
-    "python.formatting.provider": "black",
-    "python.formatting.blackArgs": [
-        "--line-length",
-        "80"
+    "python.linting.flake8Enabled": true,
+    "python.formatting.provider": "yapf",
+    "python.linting.flake8Args": [
+        "--max-line-length=120"
     ],
-    "editor.formatOnSave": true,
-    "terminal.external.osxExec": "iTerm.app",
-    "terminal.explorerKind": "external",
+    "python.formatting.yapfArgs": [
+        "--style={ based_on_style: google, column_limit: 120 }"
+    ],
+    "python.linting.pylintEnabled": false,
+    "python.sortImports.path": "/usr/local/anaconda3/envs/GPM4/bin/python",
+    "python.sortImports.args": [
+        "--multi-line=3",
+        "--trailing-comma",
+        "--force-grid-wrap=0",
+        "--use-parentheses",
+        "--line-width=79",
+    ],
     "[python]": {
-        "editor.defaultFormatter": "ms-python.python"
+        "editor.defaultFormatter": "ms-python.python",
+        "editor.formatOnPaste": false
     },
+    //
+    "matlab.mlintpath": "/Applications/MATLAB_R2020a.app/bin/maci64/mlint",
+    //
+    "kite.showWelcomeNotificationOnStartup": false,
+    "files.associations": {
+        "stdlib.h": "c"
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/*_org_*.c": true,
+        "**/file_operations.c": true
+    },
+    "explorerExclude.backup": null,
 }
