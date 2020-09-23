@@ -1,4 +1,9 @@
-from ctypes import *
+from ctypes import CDLL
+from ctypes import c_size_t
+from ctypes import c_void_p
+from ctypes import c_char_p
+from ctypes import create_string_buffer
+
 import cv2 as cv
 import cv2 as cv2
 import os
@@ -9,8 +14,26 @@ import numpy as np
 from PIL import Image
 from sultan.api import Sultan
 from scipy import signal
-from scipy import misc
+# from scipy import misc
+import platform
+from pathlib import Path, PureWindowsPath
 # from PIL import Image, ImageDraw, ImageFont
+
+# System
+cwd = str(Path.cwd())
+
+
+def path(path):
+    _platform = platform.system()
+    if _platform == "linux" or _platform == "linux2" or 'cygwin' or "darwin":
+        path = str(Path(path))
+        pass
+    elif _platform == "win32" or _platform == "win64":
+        path = str(PureWindowsPath(path))
+        pass
+    else:
+        pass
+    return path
 
 
 def debug(func):
@@ -23,14 +46,9 @@ def debug(func):
 
 
 @debug
-def pwd():
-    return os.getcwd()
-
-
-@debug
 def walk(str):
     shpfiles = []
-    for dirpath, subdirs, files in os.walk(pwd()):
+    for dirpath, subdirs, files in os.walk(cwd):
         for x in files:
             if x.endswith(str):
                 shpfiles.append(os.path.join(dirpath, x))
@@ -40,19 +58,21 @@ def walk(str):
 @debug
 def list_name(sub):
     ListOfPath = walk(sub)
-    CurrentPath = pwd()
     ListOfFile = list()
     for x in range(len(ListOfPath)):
-        ListOfFile.append(ListOfPath[x].replace(CurrentPath, "").lstrip("/").lstrip("\\"))
+        ListOfFile.append(ListOfPath[x].replace(cwd, "").lstrip("/").lstrip("\\"))
     # print(ListOfFile)
     return ListOfFile
 
 
 @debug
-def cmd_magick_convert_array(x, y, in_path="./img/le.jpg", out_path=./img/):
-    space = " "
+def cmd_magick_convert_array(x, y, in_path="./img/le.jpg", out_path="./img/le.bmp"):
+    ws = " "
+    size_str = str(x) + "x" + str(y)
+    main_path = path("./src/main.c")
+    main_out_path = path("a.out")
+    data_out_path = path(ws + "rgba" + size_str + ".h")
     try:
-        size_str = str(x) + "x" + str(y)
         # convert_flag = False
         s = Sultan()
         # List *.h
@@ -63,13 +83,13 @@ def cmd_magick_convert_array(x, y, in_path="./img/le.jpg", out_path=./img/):
                 print(items)
             # if convert_flag is False:
             # Convert image
-            s.convert("-quality 100 -resize" + space + size_str + "!" + space + in_path + space + out_path).run()
+            s.convert("-quality 100 -resize" + ws + size_str + "!" + ws + in_path + ws + out_path).run()
             #  Creat *.h
-            s.convert("le.bmp -define h:format=rgba -depth 8 -size " + size_str + " rgba" + size_str + ".h").run()
+            s.convert(in_path + ws + "-define h:format=rgba -depth 8 -size" + ws + size_str + ws + data_out_path).run()
         # else:
         # pass
         # Creat link file
-        s.gcc("-fPIC -shared -o ./a.out ./src/main.c").run()
+        s.gcc("-fPIC -shared -o" + ws + main_out_path + ws + main_path).run()
     except Exception as e:
         print(e)
     return CDLL("a.out")
@@ -165,7 +185,6 @@ class NpArray:
 
 
 class FileHandler:
-
     def __init__(self, x, y, model, name):
         self.model = model
         self.x = x
@@ -217,7 +236,6 @@ class ReadFile(FileHandler):
             np.ctypeslib.ndpointer(dtype=np.uint8, flags="C_CONTIGUOUS", ndim=3),
             c_size_t,
         ]
-        self.clib.np_memcpy_fixed_rgba.restype = c_void_p
         self.clib.np_memcpy_fixed_rgba(self.arr_dest, self.size)
         return self
 
@@ -431,17 +449,17 @@ def Gassian(arr, mode):
 
 
 if __name__ == "__main__":
-    readFile = ReadFile(320, 240, 4).np_memcpy_fixed_rgba()
-    a = cv_plot(readFile.arr_dest, cv2.COLOR_BGR2RGB)
+    readFile = ReadFile(320, 240, 4, path("./data/rgba320x240.h")).np_memcpy_fixed_rgba()
+    a = cv_plot(readFile.arr_dest, cv2.COLOR_RGB2BGR)
     plt.imshow(a)
     plt.show()
 
-    readFile = ReadFile(720, 480, 2, create_string_buffer(b"dump_2p0_th_0918.dat")).np_memcpy_bin()
+    readFile = ReadFile(720, 480, 2, create_string_buffer(b"./data/dump_2p0_th_0918.dat")).np_memcpy_bin()
     th_rgb = cv_plot(readFile.arr_dest, cv2.COLOR_YUV2RGB_Y422)
     # plt.imshow(th_rgb)
     # plt.show()
 
-    readFile = ReadFile(720, 480, 2, create_string_buffer(b"dump_2p0_img_0918.dat")).np_memcpy_bin()
+    readFile = ReadFile(720, 480, 2, create_string_buffer(b"./data/dump_2p0_img_0918.dat")).np_memcpy_bin()
     csi_rgb = cv2.cvtColor(readFile.arr_dest, cv2.COLOR_YUV2RGB_Y422)
     # plt.imshow(csi_rgb)
     # plt.show()

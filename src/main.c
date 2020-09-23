@@ -7,9 +7,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <sod_release_118/stdlib.h>
-#include "sod.h"
-#include "rgba320x240.h"
+#include <stdlib.h>
+// #include "sod.h"
+#include "../data/rgba320x240.h"
 
 #define YUYV 1
 #define VY1UY0 YUYV
@@ -29,7 +29,9 @@ API void np_memcpy(uint8_t *arr_dest, uint8_t *arr_src, size_t size)
 
 API void np_memcpy_fixed_rgba(uint8_t *arr_dest, size_t size)
 {
-    memcpy(arr_dest, (const void *)MagickImage, size);;
+    printf("aa");
+    memcpy(arr_dest, (const void *)MagickImage, size);
+    printf("aa");
     // return (void *) arr_dest;
 }
 
@@ -83,7 +85,7 @@ API void np_memcpy_bin(uint8_t *arr_dest, size_t size, char *name)
     fp = fopen(name, "rb");
     if (fp == NULL)
     {
-        printf("fopen error\r\n");
+        printf("fopen error,%s\r\n",name);
         fclose(fp);
     }
     if (fread(buff, 1, size, fp) != size) // fread回傳讀取的byte數
@@ -110,9 +112,9 @@ API void func(uint8_t *buff)
 int main()
 {
     uint8_t buff[691200];
-    np_memcpy_bin(buff, 691200, "dump_2p0_th_0918.dat");
-    // printf("0x%02zx\n", &buff);
-    // printf("0x%02zx\n", *(uint8_t *)buff);
+    np_memcpy_fixed_rgba(buff, 691200);
+    printf("0x%02zx\n", &buff);
+    printf("0x%02zx\n", *(uint8_t *)buff);
     // func("aa");
     return 0;
 }
