@@ -85,7 +85,7 @@ def cmd_magick_convert_array(x, y, in_path="./img/le.jpg", out_path="./img/le.bm
             # Convert image
             s.convert("-quality 100 -resize" + ws + size_str + "!" + ws + in_path + ws + out_path).run()
             #  Creat *.h
-            s.convert(in_path + ws + "-define h:format=rgba -depth 8 -size" + ws + size_str + ws + data_out_path).run()
+            s.convert(out_path + ws + "-define h:format=rgba -depth 8 -size" + ws + size_str + ws + data_out_path).run()
         # else:
         # pass
         # Creat link file
