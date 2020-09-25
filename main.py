@@ -199,9 +199,7 @@ class FileHandler:
         self.name = name
         self.clib = cmd_magick_convert_array(self.x, self.y)
         self.count = int(self.size / 4)
-        if model == 2:
-            self.arr_dest = np.empty(shape=(self.col, self.row, 2), dtype=np.uint8)
-        elif model == 4:
+        if (model == 1 or model == 2 or model == 3 or model == 4):
             self.arr_dest = np.empty(shape=(self.col, self.row, self.model), dtype=np.uint8)
         else:
             print("fail FileHandler")
@@ -228,7 +226,11 @@ class ReadFile(FileHandler):
             c_size_t,
             c_char_p,
         ]
-        # self.clib.np_memcpy_bin.restype = c_void_p
+        if isinstance(self.name, str):
+            self.name = self.name.encode(encoding="utf-8")
+            self.name = create_string_buffer(self.name)
+        if isinstance(self.name, bytes):
+            self.name = create_string_buffer(self.name)
         self.clib.np_memcpy_bin(self.arr_dest, self.size, self.name)
         return self
 
@@ -270,21 +272,6 @@ def pil_plot(np_arr):
     image.save("test.png")
 
 
-def cv_plot(np_arr, code=cv2.COLOR_RGB2RGBA, mode=1):
-    if mode == 0:
-        np_arr = cv2.imread("le.bmp")
-        cv2.imwrite("le.bmp", np_arr)
-        np_arr_new = cv2.cvtColor(np_arr, cv2.COLOR_BGR2RGB)
-    elif mode == 1:
-        np_arr = cv2.cvtColor(np_arr, code)
-    else:
-        print("fail plot")
-    b, g, r = cv2.split(np_arr)
-    np_arr_new = cv2.merge([r, g, b])
-    # mat_plot(np_arr_new)
-    return np_arr_new
-
-
 def make_lut_u():
     return np.array([[[i, 255 - i, 0] for i in range(256)]], dtype=np.uint8)
 
@@ -312,7 +299,7 @@ def yuv_plot(in_name="le.bmp", out_name="out.bmp"):
     cv2.waitKey()
 
 
-def binary_oprator(arr, mode):
+def binary_oprator(arr):
     """
     開運算---先腐蝕，後膨脹。去除圖像中小的亮點（CV_MOP_OPEN）；
     閉運算---先膨脹，後腐蝕。去除圖像中小的暗點（CV_MOP_CLOSE）；
@@ -321,13 +308,14 @@ def binary_oprator(arr, mode):
     黑帽---原圖像閉操作 — 原圖像（CV_MOP_BLACKHAT）；
     """
     # 核的大小和形狀
+    ret0 = arr
     kernel = cv.getStructuringElement(cv.MORPH_RECT, (3, 3))
-    ret1 = cv.morphologyEx(arr, cv.MORPH_OPEN, kernel, iterations=1)
-    ret2 = cv.morphologyEx(arr, cv.MORPH_CLOSE, kernel, iterations=1)
-    ret3 = cv.morphologyEx(arr, cv.MORPH_CLOSE, kernel, iterations=1)
-    ret4 = cv.morphologyEx(arr, cv.MORPH_CLOSE, kernel, iterations=1)
-    ret5 = cv.morphologyEx(arr, cv.MORPH_CLOSE, kernel, iterations=1)
-    ret_hstack = np.hstack(ret1, ret2, ret3, ret4, ret5)
+    ret1 = cv.morphologyEx(arr, cv.MORPH_OPEN, kernel, iterations=3)
+    ret2 = cv.morphologyEx(arr, cv.MORPH_CLOSE, kernel, iterations=3)
+    ret3 = cv.morphologyEx(arr, cv.MORPH_GRADIENT, kernel, iterations=10)
+    ret4 = cv.morphologyEx(arr, cv.MORPH_TOPHAT, kernel, iterations=5)
+    ret5 = cv.morphologyEx(arr, cv.MORPH_BLACKHAT, kernel, iterations=5)
+    ret_hstack = np.hstack((ret0, ret1, ret2, ret3, ret4, ret5))
     cv2.imshow("merged_img", ret_hstack)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
@@ -406,7 +394,10 @@ def sobel(img):
         # https://ithelp.ithome.com.tw/articles/10205752
         # https://medium.com/@fromtheast/computer-vision-resources-411ae9bfef51
     """
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    if (len(img.shape) >= 3):
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = img
 
     # x方向
     sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=5)
@@ -420,12 +411,19 @@ def sobel(img):
     sobelxy = cv2.Sobel(gray, cv2.CV_64F, 1, 1, ksize=5)
     abs_sobelxy_8u = np.uint8(np.absolute(sobelxy))
 
-    cv2.imshow("gray", gray)
-    cv2.imshow("sobelx", abs_sobelx_8u)
-    cv2.imshow("sobely", abs_sobely_8u)
-    cv2.imshow("sobelxy", abs_sobelxy_8u)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    scaled_sobel = np.uint8(255 * abs_sobelxy_8u / np.max(abs_sobelxy_8u))
+    thresh_min = 40
+    thresh_max = 100
+    sxbinary = np.zeros_like(scaled_sobel)
+    sxbinary[(scaled_sobel >= thresh_min) & (scaled_sobel <= thresh_max)] = 1
+
+    # cv2.imshow("gray", gray)
+    # cv2.imshow("sobelx", abs_sobelx_8u)
+    # cv2.imshow("sobely", abs_sobely_8u)
+    # cv2.imshow("sobelxy", abs_sobelxy_8u)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    return sxbinary
 
 
 def Gassian(arr, mode):
@@ -449,28 +447,299 @@ def Gassian(arr, mode):
     return arr
 
 
-if __name__ == "__main__":
-    readFile = ReadFile(320, 240, 4, path("./data/rgba320x240.h")).np_memcpy_fixed_rgba()
-    a = cv_plot(readFile.arr_dest, cv2.COLOR_RGB2BGR)
-    plt.imshow(a)
+# 1. Global histogram equalization
+def globalEqualHist(image):
+    # If you want to equalize the picture, you must convert the picture to a grayscale image
+    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    dst = cv.equalizeHist(gray)  # There are related notes and examples in the documentation
+    # equalizeHist(src, dst=None) function can only process single-channel data, src is the input image object matrix, which must be single-channel uint8 type matrix data
+    # dst: Output image matrix (src has the same shape)
+    cv.imshow("global equalizeHist", dst)
+    # print(len(image.shape)) # The shape length of the color image is 3
+    # print(len(gray.shape)) # The shape length of the grayscale image is 2
+    # print(gray.shape) # Grayscale image has only height and width
+    return dst
+
+
+def localEqualHist(image):
+    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    clahe = cv.createCLAHE(clipLimit=5, tileGridSize=(7, 7))
+    dst = clahe.apply(gray)
+    cv.imshow("clahe image", dst)
+    return dst
+
+
+def THRESH_OTSU(image):
+    if (len(image.shape) >= 3):
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    retval, dst = cv2.threshold(image, 0, 255, cv2.THRESH_OTSU)
+    return dst
+
+
+#創建直方圖
+def create_rgb_hist(image):
+    h, w, c = image.shape
+    rgbHist = np.zeros([16 * 16 * 16, 1], np.float32)
+    bsize = 256 / 16
+    for row in range(h):
+        for col in range(w):
+            b = image[row, col, 0]
+            g = image[row, col, 1]
+            r = image[row, col, 2]
+            index = np.int(b / bsize) * 16 * 16 + np.int(g / bsize) * 16 + np.int(r / bsize)
+            rgbHist[index, 0] += 1
+    return rgbHist
+
+
+@debug
+def mat_plot(arr1, arr2, arr3, mode=0):
+    plt.figure(1)
+    if mode == 0:
+        plt.subplot(311)
+        plt.imshow(arr1)
+        plt.subplot(312)
+        plt.imshow(arr2)
+        plt.subplot(313)
+        plt.imshow(arr3)
+    elif mode == 1:
+        plt.subplot(311)
+        plt.imshow(arr1, cmap="gray")
+        plt.subplot(312)
+        plt.imshow(arr2, cmap="gray")
+        plt.subplot(313)
+        plt.imshow(arr3, cmap="gray")
+    elif mode == 2:
+        plt.subplot(311)
+        plt.hist(arr1.ravel(), 256)
+        plt.subplot(312)
+        plt.hist(arr2.ravel(), 256)
+        plt.subplot(313)
+        plt.hist(arr3.ravel(), 256)
+    else:
+        print("fail")
     plt.show()
 
-    readFile = ReadFile(720, 480, 2, create_string_buffer(b"./data/dump_2p0_th_0918.dat")).np_memcpy_bin()
-    th_rgb = cv_plot(readFile.arr_dest, cv2.COLOR_YUV2RGB_Y422)
-    # plt.imshow(th_rgb)
+
+def sol_bel(image):
+    sobelX = cv2.Sobel(image, cv2.CV_64F, 1, 0)
+    sobelY = cv2.Sobel(image, cv2.CV_64F, 0, 1)
+    sobelX = np.uint8(np.absolute(sobelX))
+    sobelY = np.uint8(np.absolute(sobelY))
+    sobelCombined = cv2.bitwise_or(sobelX, sobelY)
+    return sobelCombined
+
+
+def test(img):
+    blur = cv2.GaussianBlur(img, (3, 3), 0)
+    smooth = cv2.addWeighted(blur, 1.5, img, -0.5, 0)
+    return smooth
+
+
+def matchAB(grayA, grayB):
+    # 讀取圖像數據
+    # imgA = cv2.imread(fileA)
+    # imgB = cv2.imread(fileB)
+
+    # 轉換成灰色
+    # grayA = cv2.cvtColor(imgA, cv2.COLOR_BGR2GRAY)
+    # grayB = cv2.cvtColor(imgB, cv2.COLOR_BGR2GRAY)
+
+    # 獲取圖片A的大小
+    height, width = grayA.shape
+
+    # 取局部圖像，尋找匹配位置
+    result_window = np.zeros((height, width), dtype=grayA.dtype)
+    for start_y in range(0, height - 100, 10):
+        for start_x in range(0, width - 100, 10):
+            window = grayA[start_y:start_y + 100, start_x:start_x + 100]
+            match = cv2.matchTemplate(grayB, window, cv2.TM_CCOEFF_NORMED)
+            _, _, _, max_loc = cv2.minMaxLoc(match)
+            matched_window = grayB[max_loc[1]:max_loc[1] + 100, max_loc[0]:max_loc[0] + 100]
+            result = cv2.absdiff(window, matched_window)
+            result_window[start_y:start_y + 100, start_x:start_x + 100] = result
+
+    plt.imshow(result_window)
+    plt.show()
+
+
+def Thin(image, array):
+    h, w = image.shape
+    iThin = image.copy()
+    for i in range(h):
+        for j in range(w):
+            if image[i, j] == 0:
+                a = [1] * 9
+                for k in range(3):
+                    for l in range(3):
+                        if -1 < (i - 1 + k) < h and -1 < (j - 1 + l) < w and iThin[i - 1 + k, j - 1 + l] == 0:
+                            a[k * 3 + l] = 0
+                sum = a[0] * 1 + a[1] * 2 + a[2] * 4 + a[3] * 8 + a[5] * 16 + a[6] * 32 + a[7] * 64 + a[8] * 128
+                iThin[i, j] = array[sum] * 255
+    return iThin
+
+
+def Two(image):
+    h, w = image.shape
+    iTwo = np.empty(shape=(h, w), dtype=np.uint8)
+    for i in range(h):
+        for j in range(w):
+            iTwo[i, j] = 0 if image[i, j] < 200 else 255
+    return iTwo
+
+
+def VThin(image, array):
+    h, w = image.shape
+    NEXT = 1
+    for i in range(h):
+        for j in range(w):
+            if NEXT == 0:
+                NEXT = 1
+            else:
+                M = image[i, j - 1] + image[i, j] + image[i, j + 1] if 0 < j < w - 1 else 1
+                if image[i, j] == 0 and M != 0:
+                    a = [0] * 9
+                    for k in range(3):
+                        for l in range(3):
+                            if -1 < (i - 1 + k) < h and -1 < (j - 1 + l) < w and image[i - 1 + k, j - 1 + l] == 255:
+                                a[k * 3 + l] = 1
+                    sum = a[0] * 1 + a[1] * 2 + a[2] * 4 + a[3] * 8 + a[5] * 16 + a[6] * 32 + a[7] * 64 + a[8] * 128
+                    image[i, j] = array[sum] * 255
+                    if array[sum] == 1:
+                        NEXT = 0
+    return image
+
+
+def HThin(image, array):
+    h, w = image.shape
+    NEXT = 1
+    for j in range(w):
+        for i in range(h):
+            if NEXT == 0:
+                NEXT = 1
+            else:
+                M = image[i - 1, j] + image[i, j] + image[i + 1, j] if 0 < i < h - 1 else 1
+                if image[i, j] == 0 and M != 0:
+                    a = [0] * 9
+                    for k in range(3):
+                        for l in range(3):
+                            if -1 < (i - 1 + k) < h and -1 < (j - 1 + l) < w and image[i - 1 + k, j - 1 + l] == 255:
+                                a[k * 3 + l] = 1
+                    sum = a[0] * 1 + a[1] * 2 + a[2] * 4 + a[3] * 8 + a[5] * 16 + a[6] * 32 + a[7] * 64 + a[8] * 128
+                    image[i, j] = array[sum] * 255
+                    if array[sum] == 1:
+                        NEXT = 0
+    return image
+
+
+array = [0,0,1,1,0,0,1,1,1,1,0,1,1,1,0,1,\
+         1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,1,\
+         0,0,1,1,0,0,1,1,1,1,0,1,1,1,0,1,\
+         1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,1,\
+         1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,\
+         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,\
+         1,1,0,0,1,1,0,0,1,1,0,1,1,1,0,1,\
+         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,\
+         0,0,1,1,0,0,1,1,1,1,0,1,1,1,0,1,\
+         1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,1,\
+         0,0,1,1,0,0,1,1,1,1,0,1,1,1,0,1,\
+         1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,0,\
+         1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,\
+         1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,0,\
+         1,1,0,0,1,1,0,0,1,1,0,1,1,1,0,0,\
+         1,1,0,0,1,1,1,0,1,1,0,0,1,0,0,0]
+
+
+def Xihua(image, array, num=1):
+    iXihua = image.copy()
+    for i in range(num):
+        VThin(iXihua, array)
+        HThin(iXihua, array)
+    return iXihua
+
+
+if __name__ == "__main__":
+    readFile = ReadFile(32, 24, 4, ("./data/ORG_32x24_dump-4.dat")).np_memcpy_bin()
+    ORG_32x24_dump_g = cv2.cvtColor(readFile.arr_dest, cv2.COLOR_RGBA2GRAY)
+    ORG_32x24_dump_r = 255 - ORG_32x24_dump_g
+    ORG_32x24_dump_th = THRESH_OTSU(ORG_32x24_dump_g)
+    ORG_32x24_dump_s1 = sol_bel(ORG_32x24_dump_g)
+    ORG_32x24_dump_s2 = sol_bel(ORG_32x24_dump_r)
+    a = test(ORG_32x24_dump_s1)
+    # ta = plt.hist(ORG_32x24_dump_g.ravel(), 256)
+
+    readFile = ReadFile(320, 240, 4, "./data/ARGB_320x240_dump-4.dat").np_memcpy_bin()
+    ARGB_320x240_dump_g = cv2.cvtColor(readFile.arr_dest, cv2.COLOR_RGBA2GRAY)
+    ARGB_320x240_dump_r = 255 - ORG_32x24_dump_g
+    ARGB_320x240_dump_th = THRESH_OTSU(ARGB_320x240_dump_g)
+    ARGB_320x240_dump_s1 = sol_bel(ARGB_320x240_dump_g)
+    ARGB_320x240_dump_s2 = sol_bel(ARGB_320x240_dump_r)
+
+    # tb = plt.hist(ARGB_320x240_dump_g.ravel(), 256)
+    b = test(ARGB_320x240_dump_s1)
+
+    readFile = ReadFile(320, 240, 2, "./data/YUYV_320x240_csi_dump-4.dat").np_memcpy_bin()
+    YUYV_64x48_dump = cv2.cvtColor(readFile.arr_dest, cv2.COLOR_YUV2RGB_Y422)
+    YUYV_64x48_dump_g = cv2.cvtColor(YUYV_64x48_dump, cv2.COLOR_RGBA2GRAY)
+    YUYV_64x48_dump_r = 255 - ORG_32x24_dump_g
+    YUYV_64x48_dump_th = THRESH_OTSU(YUYV_64x48_dump_g)
+    YUYV_64x48_dump_s1 = sol_bel(YUYV_64x48_dump_g)
+    YUYV_64x48_dump_s2 = sol_bel(YUYV_64x48_dump_r)
+    c = test(YUYV_64x48_dump_s1)
+    # tc = plt.hist(YUYV_64x48_dump_g.ravel(), 256)
+
+    # plt.imshow(ARGB_320x240_dump_g + (THRESH_OTSU(YUYV_64x48_dump_g)), cmap="gray")
     # plt.show()
 
-    readFile = ReadFile(720, 480, 2, create_string_buffer(b"./data/dump_2p0_img_0918.dat")).np_memcpy_bin()
-    csi_rgb = cv2.cvtColor(readFile.arr_dest, cv2.COLOR_YUV2RGB_Y422)
-    # plt.imshow(csi_rgb)
+    mat_plot(ORG_32x24_dump_g, ARGB_320x240_dump_g, YUYV_64x48_dump_g, 1)
+    # mat_plot(ORG_32x24_dump_g, ARGB_320x240_dump_g, YUYV_64x48_dump_g, 3)
+    # mat_plot(ORG_32x24_dump_th, ARGB_320x240_dump_th, YUYV_64x48_dump_th, 1)
+    # mat_plot(ORG_32x24_dump_r, ARGB_320x240_dump_r, YUYV_64x48_dump_r, 1)
+    # mat_plot(ORG_32x24_dump_s1, ARGB_320x240_dump_s1, YUYV_64x48_dump_s1, 1)
+    # mat_plot(THRESH_OTSU(ORG_32x24_dump_s1), THRESH_OTSU(ARGB_320x240_dump_s1), THRESH_OTSU(YUYV_64x48_dump_s1), 1)
+    # mat_plot(ORG_32x24_dump_s2, ARGB_320x240_dump_s2, YUYV_64x48_dump_s2, 1)
+    # mat_plot(THRESH_OTSU(ORG_32x24_dump_s1), THRESH_OTSU(ARGB_320x240_dump_s1), THRESH_OTSU(YUYV_64x48_dump_s1), 2)
+    # binary_oprator(THRESH_OTSU(ARGB_320x240_dump_s1))
+
+    image = 255 - THRESH_OTSU(YUYV_64x48_dump_s1)
+    iTwo = Two(image)
+    iThin = Xihua(iTwo, array)
+    # plt.imshow(iThin, cmap="gray")
+    # plt.show()
+    # plt.imshow(ARGB_320x240_dump_g + iThin, cmap="gray")
     # plt.show()
 
-    th_gray = cv2.cvtColor(th_rgb, cv2.COLOR_RGB2GRAY)
-    # plt.imshow(th_gray, cmap="gray")
-    # plt.show()
+    
+    mat_plot(ARGB_320x240_dump_g, iTwo, iThin, 1)
+    iThin = cv2.cvtColor(iThin, cv2.COLOR_GRAY2RGB)
+    h,w,c = iThin.shape
+    for i in range(h):
+        for j in range(w):
+            if iThin[i, j, 0]>=250:
+                iThin[i, j, 0] = 0x50
 
-    csi_gray = cv2.cvtColor(csi_rgb, cv2.COLOR_RGB2GRAY)
-    # plt.imshow(csi_gray, cmap="gray")
-    # plt.show()
+    # ARGB_320x240_dump_g = cv2.cvtColor(ARGB_320x240_dump_g + iThin, cv2.COLOR_GRAY2RGB)
+    # iThin = cv2.cvtColor(iThin, cv2.COLOR_GRAY2RGB)
+    # matchAB(ARGB_320x240_dump_g, iThin)
+    
+    # np.hstack(ORG_32x24_dump,ARGB_320x240_dump)
+    # th_gray = cv2.cvtColor(th_rgb, cv2.COLOR_RGB2GRAY)
+    # # plt.imshow(th_gray, cmap="gray")
+    # # plt.show()
+
+    # csi_gray = cv2.cvtColor(csi_rgb, cv2.COLOR_RGB2GRAY)
+    # # plt.imshow(csi_gray, cmap="gray")
+    # # plt.show()
+
+    # src = cv.imread("handsomeboy.png")
+    # cv.imshow("original image", src)
+
+    # src0 = THRESH_OTSU(src)
+    # cv.imshow("THRESH_OTSU", THRESH_OTSU(src0))
+    # src1 = localEqualHist(src)
+    # cv.imshow("lo_THRESH_OTSU", THRESH_OTSU(src1))
+    # src2 = globalEqualHist(src)
+    # cv.imshow("gl_THRESH_OTSU", THRESH_OTSU(src2))
 
     pass
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
