@@ -8,8 +8,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-#include "../inc/sod.h"
-#include "../inc/def.h"
 #include "../rgba320x240.h"
 
 #define YUYV 1

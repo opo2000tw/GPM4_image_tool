@@ -1,7 +1,11 @@
 from ctypes import CDLL
 from ctypes import c_size_t
 from ctypes import c_void_p
-from ctypes import c_char_p
+from ctypes import c_char
+from ctypes import c_float
+from ctypes import c_int
+from ctypes import Structure
+from ctypes import POINTER
 from ctypes import create_string_buffer
 
 import cv2 as cv
@@ -21,6 +25,10 @@ from pathlib import Path, PureWindowsPath
 
 # System
 cwd = str(Path.cwd())
+
+
+class POINT(Structure):
+    _fields_ = [("h", c_int), ("w", c_int), ("c", c_int), ("data", POINTER(c_float))]
 
 
 def path(path):
@@ -224,7 +232,7 @@ class ReadFile(FileHandler):
         self.clib.np_memcpy_bin.argtypes = [
             np.ctypeslib.ndpointer(dtype=np.uint8, flags="C_CONTIGUOUS", ndim=3),
             c_size_t,
-            c_char_p,
+            POINTER(c_char),
         ]
         if isinstance(self.name, str):
             self.name = self.name.encode(encoding="utf-8")
@@ -243,7 +251,7 @@ class ReadFile(FileHandler):
         return self
 
     def func(self, buf):
-        self.clib.func.argtype = c_char_p
+        self.clib.func.argtype = POINTER(c_char)
         # self.clib.func.restype = c_long
         self.clib.func(buf)
         return self
@@ -688,18 +696,18 @@ if __name__ == "__main__":
     ARGB_320x240_dump_g_cut = np.copy(ARGB_320x240_dump_g)
     plt.imshow(ORG_32x24_dump_g, cmap=plt.get_cmap('jet'), interpolation='nearest')
     plt.show()
-    h, w= ARGB_320x240_dump_g_cut.shape
+    h, w = ARGB_320x240_dump_g_cut.shape
     for i in range(h):
         for j in range(w):
-            if ARGB_320x240_dump_g_cut[i,j] > 30:
-                ARGB_320x240_dump_g_cut[i,j] = 255
+            if ARGB_320x240_dump_g_cut[i, j] > 30:
+                ARGB_320x240_dump_g_cut[i, j] = 255
 
     YUYV_64x48_dump_g_cut = np.copy(YUYV_64x48_dump_g)
-    h, w= YUYV_64x48_dump_g_cut.shape
+    h, w = YUYV_64x48_dump_g_cut.shape
     for i in range(h):
         for j in range(w):
-            if ARGB_320x240_dump_g_cut[i,j] < 30:
-                YUYV_64x48_dump_g_cut[i,j] = 255
+            if ARGB_320x240_dump_g_cut[i, j] < 30:
+                YUYV_64x48_dump_g_cut[i, j] = 255
     YUYV_64x48_dump_s1 = sol_bel(YUYV_64x48_dump_g_cut)
     YUYV_64x48_dump_s2 = sol_bel(YUYV_64x48_dump_r)
     c = test(YUYV_64x48_dump_s1)
@@ -721,10 +729,8 @@ if __name__ == "__main__":
     # ARGB_320x240_dump_g =  THRESH_OTSU(ARGB_320x240_dump_s1)
     # mat_plot(ORG_32x24_dump_g, ARGB_320x240_dump_g, YUYV_64x48_dump_g, 1)
 
-
-
     # mat_plot(ORG_32x24_dump_g, ARGB_320x240_dump_g_cut, YUYV_64x48_dump_g_cut, 1)
-#####
+    #####
     image = 255 - THRESH_OTSU(YUYV_64x48_dump_s1)
     iTwo = Two(image)
     iThin = Xihua(iTwo, array)
@@ -766,7 +772,7 @@ if __name__ == "__main__":
     plt.show()
     binary_oprator(final2)
     pass
-####
+    ####
 
     # ARGB_320x240_dump_g = cv2.cvtColor(ARGB_320x240_dump_g + iThin, cv2.COLOR_GRAY2RGB)
     # iThin = cv2.cvtColor(iThin, cv2.COLOR_GRAY2RGB)

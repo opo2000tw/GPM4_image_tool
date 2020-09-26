@@ -1,0 +1,1 @@
+#define OTSU_GRAYLEVEL 256
