@@ -8,7 +8,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-// #include "sod.h"
+#include "../inc/sod.h"
+#include "../inc/def.h"
 #include "../rgba320x240.h"
 
 #define YUYV 1
@@ -68,11 +69,10 @@ API void np_memcpy_bin(uint8_t *arr_dest, size_t size, char *name)
     size_t ret;
     FILE *fp;
     fp = fopen(name, "rb");
-    
     printf("size,%zu\r\n", size);
     if (fp == NULL)
     {
-        printf("fopen error,%s\r\n",name);
+        printf("fopen error,%s\r\n", name);
         fclose(fp);
     }
     if (fread(buff, 1, size, fp) != size) // fread回傳讀取的byte數

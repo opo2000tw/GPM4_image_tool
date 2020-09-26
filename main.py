@@ -310,11 +310,13 @@ def binary_oprator(arr):
     # 核的大小和形狀
     ret0 = arr
     kernel = cv.getStructuringElement(cv.MORPH_RECT, (3, 3))
-    ret1 = cv.morphologyEx(arr, cv.MORPH_OPEN, kernel, iterations=3)
-    ret2 = cv.morphologyEx(arr, cv.MORPH_CLOSE, kernel, iterations=3)
-    ret3 = cv.morphologyEx(arr, cv.MORPH_GRADIENT, kernel, iterations=10)
-    ret4 = cv.morphologyEx(arr, cv.MORPH_TOPHAT, kernel, iterations=5)
-    ret5 = cv.morphologyEx(arr, cv.MORPH_BLACKHAT, kernel, iterations=5)
+    ret1 = cv.morphologyEx(arr, cv.MORPH_OPEN, kernel, iterations=1)
+    ret2 = cv.morphologyEx(arr, cv.MORPH_CLOSE, kernel, iterations=2)
+    plt.imshow(ret2, cmap=plt.get_cmap('jet'), interpolation='nearest')
+    plt.show()
+    ret3 = cv.morphologyEx(arr, cv.MORPH_GRADIENT, kernel, iterations=1)
+    ret4 = cv.morphologyEx(arr, cv.MORPH_TOPHAT, kernel, iterations=2)
+    ret5 = cv.morphologyEx(arr, cv.MORPH_BLACKHAT, kernel, iterations=1)
     ret_hstack = np.hstack((ret0, ret1, ret2, ret3, ret4, ret5))
     cv2.imshow("merged_img", ret_hstack)
     cv2.waitKey(0)
@@ -412,7 +414,7 @@ def sobel(img):
     abs_sobelxy_8u = np.uint8(np.absolute(sobelxy))
 
     scaled_sobel = np.uint8(255 * abs_sobelxy_8u / np.max(abs_sobelxy_8u))
-    thresh_min = 40
+    thresh_min = 50
     thresh_max = 100
     sxbinary = np.zeros_like(scaled_sobel)
     sxbinary[(scaled_sobel >= thresh_min) & (scaled_sobel <= thresh_max)] = 1
@@ -473,6 +475,7 @@ def THRESH_OTSU(image):
     if (len(image.shape) >= 3):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     retval, dst = cv2.threshold(image, 0, 255, cv2.THRESH_OTSU)
+    print(retval)
     return dst
 
 
@@ -682,7 +685,22 @@ if __name__ == "__main__":
     YUYV_64x48_dump_g = cv2.cvtColor(YUYV_64x48_dump, cv2.COLOR_RGBA2GRAY)
     YUYV_64x48_dump_r = 255 - ORG_32x24_dump_g
     YUYV_64x48_dump_th = THRESH_OTSU(YUYV_64x48_dump_g)
-    YUYV_64x48_dump_s1 = sol_bel(YUYV_64x48_dump_g)
+    ARGB_320x240_dump_g_cut = np.copy(ARGB_320x240_dump_g)
+    plt.imshow(ORG_32x24_dump_g, cmap=plt.get_cmap('jet'), interpolation='nearest')
+    plt.show()
+    h, w= ARGB_320x240_dump_g_cut.shape
+    for i in range(h):
+        for j in range(w):
+            if ARGB_320x240_dump_g_cut[i,j] > 30:
+                ARGB_320x240_dump_g_cut[i,j] = 255
+
+    YUYV_64x48_dump_g_cut = np.copy(YUYV_64x48_dump_g)
+    h, w= YUYV_64x48_dump_g_cut.shape
+    for i in range(h):
+        for j in range(w):
+            if ARGB_320x240_dump_g_cut[i,j] < 30:
+                YUYV_64x48_dump_g_cut[i,j] = 255
+    YUYV_64x48_dump_s1 = sol_bel(YUYV_64x48_dump_g_cut)
     YUYV_64x48_dump_s2 = sol_bel(YUYV_64x48_dump_r)
     c = test(YUYV_64x48_dump_s1)
     # tc = plt.hist(YUYV_64x48_dump_g.ravel(), 256)
@@ -690,7 +708,7 @@ if __name__ == "__main__":
     # plt.imshow(ARGB_320x240_dump_g + (THRESH_OTSU(YUYV_64x48_dump_g)), cmap="gray")
     # plt.show()
 
-    mat_plot(ORG_32x24_dump_g, ARGB_320x240_dump_g, YUYV_64x48_dump_g, 1)
+    # mat_plot(ORG_32x24_dump_g, ARGB_320x240_dump_g, YUYV_64x48_dump_g, 1)
     # mat_plot(ORG_32x24_dump_g, ARGB_320x240_dump_g, YUYV_64x48_dump_g, 3)
     # mat_plot(ORG_32x24_dump_th, ARGB_320x240_dump_th, YUYV_64x48_dump_th, 1)
     # mat_plot(ORG_32x24_dump_r, ARGB_320x240_dump_r, YUYV_64x48_dump_r, 1)
@@ -700,6 +718,13 @@ if __name__ == "__main__":
     # mat_plot(THRESH_OTSU(ORG_32x24_dump_s1), THRESH_OTSU(ARGB_320x240_dump_s1), THRESH_OTSU(YUYV_64x48_dump_s1), 2)
     # binary_oprator(THRESH_OTSU(ARGB_320x240_dump_s1))
 
+    # ARGB_320x240_dump_g =  THRESH_OTSU(ARGB_320x240_dump_s1)
+    # mat_plot(ORG_32x24_dump_g, ARGB_320x240_dump_g, YUYV_64x48_dump_g, 1)
+
+
+
+    # mat_plot(ORG_32x24_dump_g, ARGB_320x240_dump_g_cut, YUYV_64x48_dump_g_cut, 1)
+#####
     image = 255 - THRESH_OTSU(YUYV_64x48_dump_s1)
     iTwo = Two(image)
     iThin = Xihua(iTwo, array)
@@ -707,20 +732,46 @@ if __name__ == "__main__":
     # plt.show()
     # plt.imshow(ARGB_320x240_dump_g + iThin, cmap="gray")
     # plt.show()
-
-    
-    mat_plot(ARGB_320x240_dump_g, iTwo, iThin, 1)
-    iThin = cv2.cvtColor(iThin, cv2.COLOR_GRAY2RGB)
-    h,w,c = iThin.shape
+    iThin = THRESH_OTSU(iThin)
+    iTwo = 255 - THRESH_OTSU(iTwo)
+    iThin = cv2.cvtColor(iThin, cv2.COLOR_GRAY2BGR)
+    iTwo = cv2.cvtColor(iTwo, cv2.COLOR_GRAY2BGR)
+    ARGB_320x240_dump_g = cv2.cvtColor(ARGB_320x240_dump_g, cv2.COLOR_GRAY2BGR)
+    h, w, c = iThin.shape
     for i in range(h):
         for j in range(w):
-            if iThin[i, j, 0]>=250:
-                iThin[i, j, 0] = 0x50
+            if iThin[i, j, 0] < 200:
+                iThin[i, j, 0] = 0
+
+    h, w, c = iTwo.shape
+    for i in range(h):
+        for j in range(w):
+            if iTwo[i, j, 0] < 200:
+                iTwo[i, j, 0] = 0
+
+    # final1 = iThin[:, :, :] - ARGB_320x240_dump_g[:, :, :]
+    # final1 = cv2.cvtColor(final1, cv2.COLOR_BGR2GRAY)
+    final2 = iTwo[:, :, :] + ARGB_320x240_dump_g[:, :, :]
+    h, w, c = iTwo.shape
+    for i in range(h):
+        for j in range(w):
+            if iTwo[i, j, 0] == 255:
+                final2[i, j, 0] = 0
+                final2[i, j, 1] = 0
+                final2[i, j, 2] = 0
+    final2 = cv2.cvtColor(final2, cv2.COLOR_BGR2GRAY)
+    # mat_plot(YUYV_64x48_dump_g_cut, final2, iTwo, 0)
+
+    plt.imshow(final2, cmap=plt.get_cmap('jet'), interpolation='nearest')
+    plt.show()
+    binary_oprator(final2)
+    pass
+####
 
     # ARGB_320x240_dump_g = cv2.cvtColor(ARGB_320x240_dump_g + iThin, cv2.COLOR_GRAY2RGB)
     # iThin = cv2.cvtColor(iThin, cv2.COLOR_GRAY2RGB)
     # matchAB(ARGB_320x240_dump_g, iThin)
-    
+
     # np.hstack(ORG_32x24_dump,ARGB_320x240_dump)
     # th_gray = cv2.cvtColor(th_rgb, cv2.COLOR_RGB2GRAY)
     # # plt.imshow(th_gray, cmap="gray")
