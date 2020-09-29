@@ -30,37 +30,6 @@ API void np_memcpy_fixed_rgba(uint8_t *arr_dest, size_t size)
     memcpy(arr_dest, (const void *)MagickImage, size);
 }
 
-static uint8_t *revmemcpy (uint8_t *dest, const void *src, size_t len, uint8_t mod)
-{
-    const char *s = src;
-    if (mod != VY1UY0 || len % 4 != 0)
-    {
-        printf("mod & len error\r\n");
-    }
-    if (mod == VY1UY0)
-    {
-        uint8_t *dynArr = malloc( (len / 4 * 6) * sizeof(uint8_t) );
-        uint8_t *d = dest + len - 1;
-        if (dynArr == NULL)
-        {
-            printf("malloc error\r\n");
-        }
-        *d = *s++;
-        *s++;
-        // r = ((256 * y             + (351 * v))  >> 8);
-        // g = ((256 * y - (86  * u) - (179 * v))  >> 8);
-        // b = ((256 * y + (444 * u))              >> 8);
-        while (len--)
-        {
-        }
-    }
-    else
-    {
-        return NULL;
-    }
-    return dest;
-}
-
 API void np_memcpy_bin(uint8_t *arr_dest, size_t size, char *name)
 {
     char buff[size];
