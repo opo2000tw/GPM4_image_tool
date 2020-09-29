@@ -688,10 +688,11 @@ if __name__ == "__main__":
     YUYV_64x48_dump = cv2.cvtColor(readFile.arr_dest, cv2.COLOR_YUV2RGB_Y422)
     YUYV_64x48_dump_g = cv2.cvtColor(YUYV_64x48_dump, cv2.COLOR_RGBA2GRAY)
     YUYV_64x48_dump_th = (YUYV_64x48_dump_g)
-    YUYV_64x48_dump_s1 = sol_bel(YUYV_64x48_dump_g)
     time_scale.end("read")
+    YUYV_64x48_dump_s1 = sol_bel(YUYV_64x48_dump_g)
+    time_scale.end("sobel YUYV_64x48_dump_s1")
     ARGB_320x240_dump_s1 = sol_bel(ARGB_320x240_dump_g)
-    time_scale.end("sobel")
+    time_scale.end("sobel ARGB_320x240_dump_s1")
     # YUYV_64x48_dump_g_cut = np.copy(YUYV_64x48_dump_g)
     # h, w = YUYV_64x48_dump_g_cut.shape
     # for i in range(h):
@@ -742,7 +743,7 @@ if __name__ == "__main__":
         if cv2.countNonZero(im) == 0:
             break
         i += 1
-    time_scale.end()
+    time_scale.end("Skeleton")
     cv2.imshow('Skeleton', skel)
 
     pass
