@@ -45,3 +45,4 @@ nodeLanguageServer.*/**
 *.so
 
 garbage
+data
