@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-#include "../rgba320x240.h"
+#include "../data/rgba320x240.h"
 
 #define YUYV 1
 #define VY1UY0 YUYV
