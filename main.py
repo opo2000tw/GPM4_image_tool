@@ -258,21 +258,6 @@ class ReadFile(FileHandler):
 
 
 @debug
-def mat_plot(np_arr, mode=0):
-    img_org = Image.open("le.bmp").convert("RGBA")
-    np_arr_image = np.array(img_org)
-    plt.figure(1)
-    plt.subplot(211)
-    plt.imshow(np_arr_image)
-    plt.subplot(212)
-    if mode == 0:
-        plt.imshow(np_arr)
-    else:
-        plt.imshow(np_arr, cmap="gray")
-    plt.show()
-
-
-@debug
 def pil_plot(np_arr):
     image = Image.fromarray(np_arr)
     print(np_arr)
@@ -319,12 +304,10 @@ def binary_oprator(arr):
     ret0 = arr
     kernel = cv.getStructuringElement(cv.MORPH_RECT, (3, 3))
     ret1 = cv.morphologyEx(arr, cv.MORPH_OPEN, kernel, iterations=1)
-    ret2 = cv.morphologyEx(arr, cv.MORPH_CLOSE, kernel, iterations=2)
-    plt.imshow(ret2, cmap=plt.get_cmap('jet'), interpolation='nearest')
-    plt.show()
+    ret2 = cv.morphologyEx(arr, cv.MORPH_CLOSE, kernel, iterations=1)
     ret3 = cv.morphologyEx(arr, cv.MORPH_GRADIENT, kernel, iterations=1)
-    ret4 = cv.morphologyEx(arr, cv.MORPH_TOPHAT, kernel, iterations=2)
-    ret5 = cv.morphologyEx(arr, cv.MORPH_BLACKHAT, kernel, iterations=1)
+    ret4 = cv.morphologyEx(arr, cv.MORPH_TOPHAT, kernel, iterations=3)
+    ret5 = cv.morphologyEx(arr, cv.MORPH_BLACKHAT, kernel, iterations=3)
     ret_hstack = np.hstack((ret0, ret1, ret2, ret3, ret4, ret5))
     cv2.imshow("merged_img", ret_hstack)
     cv2.waitKey(0)
@@ -422,7 +405,7 @@ def sobel(img):
     abs_sobelxy_8u = np.uint8(np.absolute(sobelxy))
 
     scaled_sobel = np.uint8(255 * abs_sobelxy_8u / np.max(abs_sobelxy_8u))
-    thresh_min = 50
+    thresh_min = 20
     thresh_max = 100
     sxbinary = np.zeros_like(scaled_sobel)
     sxbinary[(scaled_sobel >= thresh_min) & (scaled_sobel <= thresh_max)] = 1
@@ -503,9 +486,10 @@ def create_rgb_hist(image):
 
 
 @debug
-def mat_plot(arr1, arr2, arr3, mode=0):
+def mat_plot(title, arr1, arr2, arr3, mode=0):
     plt.figure(1)
     if mode == 0:
+        plt.title = title
         plt.subplot(311)
         plt.imshow(arr1)
         plt.subplot(312)
@@ -513,6 +497,7 @@ def mat_plot(arr1, arr2, arr3, mode=0):
         plt.subplot(313)
         plt.imshow(arr3)
     elif mode == 1:
+        plt.title = title
         plt.subplot(311)
         plt.imshow(arr1, cmap="gray")
         plt.subplot(312)
@@ -520,6 +505,7 @@ def mat_plot(arr1, arr2, arr3, mode=0):
         plt.subplot(313)
         plt.imshow(arr3, cmap="gray")
     elif mode == 2:
+        plt.title = title
         plt.subplot(311)
         plt.hist(arr1.ravel(), 256)
         plt.subplot(312)
@@ -668,134 +654,96 @@ def Xihua(image, array, num=1):
     return iXihua
 
 
+class time_scale():
+    """
+    docstring
+    """
+
+    def __init__(self):
+        self.start_time = time.time()
+
+    def update(self, name=""):
+        self.start_time = time.time()
+
+    def end(self, name="default"):
+        print("#%s --- %s seconds ---" % (name, (time.time() - self.start_time)))
+        self.start_time = time.time()
+        pass
+
+
 if __name__ == "__main__":
+    time_scale = time_scale()
     readFile = ReadFile(32, 24, 4, ("./data/ORG_32x24_dump-4.dat")).np_memcpy_bin()
     ORG_32x24_dump_g = cv2.cvtColor(readFile.arr_dest, cv2.COLOR_RGBA2GRAY)
-    ORG_32x24_dump_r = 255 - ORG_32x24_dump_g
-    ORG_32x24_dump_th = THRESH_OTSU(ORG_32x24_dump_g)
+    ORG_32x24_dump_th = (ORG_32x24_dump_g)
     ORG_32x24_dump_s1 = sol_bel(ORG_32x24_dump_g)
-    ORG_32x24_dump_s2 = sol_bel(ORG_32x24_dump_r)
-    a = test(ORG_32x24_dump_s1)
     # ta = plt.hist(ORG_32x24_dump_g.ravel(), 256)
 
     readFile = ReadFile(320, 240, 4, "./data/ARGB_320x240_dump-4.dat").np_memcpy_bin()
     ARGB_320x240_dump_g = cv2.cvtColor(readFile.arr_dest, cv2.COLOR_RGBA2GRAY)
-    ARGB_320x240_dump_r = 255 - ORG_32x24_dump_g
-    ARGB_320x240_dump_th = THRESH_OTSU(ARGB_320x240_dump_g)
-    ARGB_320x240_dump_s1 = sol_bel(ARGB_320x240_dump_g)
-    ARGB_320x240_dump_s2 = sol_bel(ARGB_320x240_dump_r)
-
+    ARGB_320x240_dump_th = (ARGB_320x240_dump_g)
     # tb = plt.hist(ARGB_320x240_dump_g.ravel(), 256)
-    b = test(ARGB_320x240_dump_s1)
 
     readFile = ReadFile(320, 240, 2, "./data/YUYV_320x240_csi_dump-4.dat").np_memcpy_bin()
     YUYV_64x48_dump = cv2.cvtColor(readFile.arr_dest, cv2.COLOR_YUV2RGB_Y422)
     YUYV_64x48_dump_g = cv2.cvtColor(YUYV_64x48_dump, cv2.COLOR_RGBA2GRAY)
-    YUYV_64x48_dump_r = 255 - ORG_32x24_dump_g
-    YUYV_64x48_dump_th = THRESH_OTSU(YUYV_64x48_dump_g)
-    ARGB_320x240_dump_g_cut = np.copy(ARGB_320x240_dump_g)
-    plt.imshow(ORG_32x24_dump_g, cmap=plt.get_cmap('jet'), interpolation='nearest')
-    plt.show()
-    h, w = ARGB_320x240_dump_g_cut.shape
-    for i in range(h):
-        for j in range(w):
-            if ARGB_320x240_dump_g_cut[i, j] > 30:
-                ARGB_320x240_dump_g_cut[i, j] = 255
+    YUYV_64x48_dump_th = (YUYV_64x48_dump_g)
+    YUYV_64x48_dump_s1 = sol_bel(YUYV_64x48_dump_g)
+    time_scale.end("read")
+    ARGB_320x240_dump_s1 = sol_bel(ARGB_320x240_dump_g)
+    time_scale.end("sobel")
+    # YUYV_64x48_dump_g_cut = np.copy(YUYV_64x48_dump_g)
+    # h, w = YUYV_64x48_dump_g_cut.shape
+    # for i in range(h):
+    #     for j in range(w):
+    #         if ARGB_320x240_dump_g_cut[i, j] < 30:
+    #             YUYV_64x48_dump_g_cut[i, j] = 255
 
-    YUYV_64x48_dump_g_cut = np.copy(YUYV_64x48_dump_g)
-    h, w = YUYV_64x48_dump_g_cut.shape
-    for i in range(h):
-        for j in range(w):
-            if ARGB_320x240_dump_g_cut[i, j] < 30:
-                YUYV_64x48_dump_g_cut[i, j] = 255
-    YUYV_64x48_dump_s1 = sol_bel(YUYV_64x48_dump_g_cut)
-    YUYV_64x48_dump_s2 = sol_bel(YUYV_64x48_dump_r)
-    c = test(YUYV_64x48_dump_s1)
-    # tc = plt.hist(YUYV_64x48_dump_g.ravel(), 256)
+    # mat_plot("sobel", ORG_32x24_dump_g, ARGB_320x240_dump_g, YUYV_64x48_dump_g, 1)
+    # mat_plot("sobel", ORG_32x24_dump_g, ARGB_320x240_dump_g, YUYV_64x48_dump_g, 2)
+    # mat_plot("sobel",THRESH_OTSU(ORG_32x24_dump_g), THRESH_OTSU(ARGB_320x240_dump_g), THRESH_OTSU(YUYV_64x48_dump_g), 2)
+    # mat_plot("th", ORG_32x24_dump_th, ARGB_320x240_dump_th, YUYV_64x48_dump_th, 1)
+    # mat_plot("sobel", ORG_32x24_dump_s1, ARGB_320x240_dump_s1, YUYV_64x48_dump_s1, 1)
+    # mat_plot("sobel",ORG_32x24_dump_g, ARGB_320x240_dump_g, YUYV_64x48_dump_g, 2)
 
-    # plt.imshow(ARGB_320x240_dump_g + (THRESH_OTSU(YUYV_64x48_dump_g)), cmap="gray")
-    # plt.show()
-
-    # mat_plot(ORG_32x24_dump_g, ARGB_320x240_dump_g, YUYV_64x48_dump_g, 1)
-    # mat_plot(ORG_32x24_dump_g, ARGB_320x240_dump_g, YUYV_64x48_dump_g, 3)
-    # mat_plot(ORG_32x24_dump_th, ARGB_320x240_dump_th, YUYV_64x48_dump_th, 1)
-    # mat_plot(ORG_32x24_dump_r, ARGB_320x240_dump_r, YUYV_64x48_dump_r, 1)
-    # mat_plot(ORG_32x24_dump_s1, ARGB_320x240_dump_s1, YUYV_64x48_dump_s1, 1)
+    iThin = Xihua(ARGB_320x240_dump_s1, array, 3)
+    # cv2.imshow('iThin', iThin)
+    time_scale.end("thin")
+    # binary_oprator(iThin)
+    # mat_plot("THRESH_OTSU", iThin, ARGB_320x240_dump_s1+iThin, ARGB_320x240_dump_g, 1)
     # mat_plot(THRESH_OTSU(ORG_32x24_dump_s1), THRESH_OTSU(ARGB_320x240_dump_s1), THRESH_OTSU(YUYV_64x48_dump_s1), 1)
-    # mat_plot(ORG_32x24_dump_s2, ARGB_320x240_dump_s2, YUYV_64x48_dump_s2, 1)
-    # mat_plot(THRESH_OTSU(ORG_32x24_dump_s1), THRESH_OTSU(ARGB_320x240_dump_s1), THRESH_OTSU(YUYV_64x48_dump_s1), 2)
     # binary_oprator(THRESH_OTSU(ARGB_320x240_dump_s1))
 
-    # ARGB_320x240_dump_g =  THRESH_OTSU(ARGB_320x240_dump_s1)
-    # mat_plot(ORG_32x24_dump_g, ARGB_320x240_dump_g, YUYV_64x48_dump_g, 1)
+    # mat_plot("THRESH_OTSU", iThin, ARGB_320x240_dump_g-iThin, ARGB_320x240_dump_g, 1)
+    # mat_plot("THRESH_OTSU", iThin, ARGB_320x240_dump_g-iThin, ARGB_320x240_dump_g, 2)
+    # test_img = cv2.GaussianBlur(ARGB_320x240_dump_g - iThin, (5, 5), 0)
+    # mat_plot("THRESH_OTSU", iThin, ARGB_320x240_dump_g - iThin, test_img, 1)
+    # binary_oprator(iThin)
 
-    # mat_plot(ORG_32x24_dump_g, ARGB_320x240_dump_g_cut, YUYV_64x48_dump_g_cut, 1)
-    #####
-    image = 255 - THRESH_OTSU(YUYV_64x48_dump_s1)
-    iTwo = Two(image)
-    iThin = Xihua(iTwo, array)
-    # plt.imshow(iThin, cmap="gray")
-    # plt.show()
-    # plt.imshow(ARGB_320x240_dump_g + iThin, cmap="gray")
-    # plt.show()
-    iThin = THRESH_OTSU(iThin)
-    iTwo = 255 - THRESH_OTSU(iTwo)
-    iThin = cv2.cvtColor(iThin, cv2.COLOR_GRAY2BGR)
-    iTwo = cv2.cvtColor(iTwo, cv2.COLOR_GRAY2BGR)
-    ARGB_320x240_dump_g = cv2.cvtColor(ARGB_320x240_dump_g, cv2.COLOR_GRAY2BGR)
-    h, w, c = iThin.shape
-    for i in range(h):
-        for j in range(w):
-            if iThin[i, j, 0] < 200:
-                iThin[i, j, 0] = 0
+    im = THRESH_OTSU(ARGB_320x240_dump_s1)
+    element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
 
-    h, w, c = iTwo.shape
-    for i in range(h):
-        for j in range(w):
-            if iTwo[i, j, 0] < 200:
-                iTwo[i, j, 0] = 0
+    skel = np.zeros(im.shape, np.uint8)
+    erode = np.zeros(im.shape, np.uint8)
+    temp = np.zeros(im.shape, np.uint8)
 
-    # final1 = iThin[:, :, :] - ARGB_320x240_dump_g[:, :, :]
-    # final1 = cv2.cvtColor(final1, cv2.COLOR_BGR2GRAY)
-    final2 = iTwo[:, :, :] + ARGB_320x240_dump_g[:, :, :]
-    h, w, c = iTwo.shape
-    for i in range(h):
-        for j in range(w):
-            if iTwo[i, j, 0] == 255:
-                final2[i, j, 0] = 0
-                final2[i, j, 1] = 0
-                final2[i, j, 2] = 0
-    final2 = cv2.cvtColor(final2, cv2.COLOR_BGR2GRAY)
-    # mat_plot(YUYV_64x48_dump_g_cut, final2, iTwo, 0)
+    i = 0
+    while True:
+        # cv2.imshow('im %d' % (i), im)
+        erode = cv2.erode(im, element)
+        temp = cv2.dilate(erode, element)
 
-    plt.imshow(final2, cmap=plt.get_cmap('jet'), interpolation='nearest')
-    plt.show()
-    binary_oprator(final2)
-    pass
-    ####
+        #消失的像素是skeleton的一部分
+        temp = cv2.subtract(im, temp)
+        # cv2.imshow('skeleton part %d' % (i,), temp)
+        skel = cv2.bitwise_or(skel, temp)
+        im = erode.copy()
 
-    # ARGB_320x240_dump_g = cv2.cvtColor(ARGB_320x240_dump_g + iThin, cv2.COLOR_GRAY2RGB)
-    # iThin = cv2.cvtColor(iThin, cv2.COLOR_GRAY2RGB)
-    # matchAB(ARGB_320x240_dump_g, iThin)
-
-    # np.hstack(ORG_32x24_dump,ARGB_320x240_dump)
-    # th_gray = cv2.cvtColor(th_rgb, cv2.COLOR_RGB2GRAY)
-    # # plt.imshow(th_gray, cmap="gray")
-    # # plt.show()
-
-    # csi_gray = cv2.cvtColor(csi_rgb, cv2.COLOR_RGB2GRAY)
-    # # plt.imshow(csi_gray, cmap="gray")
-    # # plt.show()
-
-    # src = cv.imread("handsomeboy.png")
-    # cv.imshow("original image", src)
-
-    # src0 = THRESH_OTSU(src)
-    # cv.imshow("THRESH_OTSU", THRESH_OTSU(src0))
-    # src1 = localEqualHist(src)
-    # cv.imshow("lo_THRESH_OTSU", THRESH_OTSU(src1))
-    # src2 = globalEqualHist(src)
-    # cv.imshow("gl_THRESH_OTSU", THRESH_OTSU(src2))
+        if cv2.countNonZero(im) == 0:
+            break
+        i += 1
+    time_scale.end()
+    cv2.imshow('Skeleton', skel)
 
     pass
     cv2.waitKey(0)
