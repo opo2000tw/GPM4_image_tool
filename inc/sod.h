@@ -119,7 +119,7 @@ struct sod_box {
 struct sod_img {
 	int h;   /* Image/frame height */
 	int w;   /* Image/frame width */
-	int c;   /* Image depth/Total number of color channels e.g. 1 for grayscale images, 3 RGB, etc. */
+	int c;   /* Image depth/Total number of color channels e.g. 1 for grayscale images, 3 RGB, 2 YUYC422, 5  etc. */
 	float *data; /* Blob */
 };
 /*
