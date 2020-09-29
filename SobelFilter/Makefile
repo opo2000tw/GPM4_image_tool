@@ -13,10 +13,10 @@
 
 all:
 	cd src && make
-# 	cd tests && make
+	cd tests && make
 
 check:
-# 	cd tests && make check
+	cd tests && make check
 
 run:
 	convert imgs/img.png imgs/img.rgb

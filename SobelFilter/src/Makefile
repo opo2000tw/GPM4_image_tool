@@ -20,7 +20,7 @@ FLAGS=-std=c99 -g -lm
 all: $(OBJS) archive
 	gcc $(OBJS) -o $(EXE) $(FLAGS)
 
-%.o : %.c
+.c.o:
 	gcc -c $< -o $@ $(FLAGS)
 
 archive:
