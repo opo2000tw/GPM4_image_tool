@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include "../inc/sod.h"
 #include "../data/rgba320x240.h"
 
 #define YUYV 1
@@ -33,7 +34,6 @@ API void np_memcpy_fixed_rgba(uint8_t *arr_dest, size_t size)
 API void np_memcpy_bin(uint8_t *arr_dest, size_t size, char *name)
 {
     char buff[size];
-    size_t ret;
     FILE *fp;
     fp = fopen(name, "rb");
     printf("size,%zu\r\n", size);
@@ -50,8 +50,6 @@ API void np_memcpy_bin(uint8_t *arr_dest, size_t size, char *name)
     fclose(fp);
 }
 
-static const char some_data[] = "8.07.696";
-
 API void func(uint8_t *buff)
 {
     printf("%s", buff);
@@ -59,10 +57,7 @@ API void func(uint8_t *buff)
 
 int main()
 {
-    uint8_t buff[691200];
-    np_memcpy_fixed_rgba(buff, 691200);
-    printf("0x%02zx\n", &buff);
-    printf("0x%02zx\n", *(uint8_t *)buff);
-    // func("aa");
+    func((uint8_t*)"Start");
+    
     return 0;
 }
