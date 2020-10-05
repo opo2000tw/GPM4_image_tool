@@ -51,7 +51,7 @@
         "**/CVS": true,
         "**/.DS_Store": true,
         "**/*_org_*.c": true,
-        "**/file_operations.c": true
+        "**/file_operations.c": false
     },
     "explorerExclude.backup": null,
 }
