@@ -674,12 +674,13 @@ class time_scale():
 if __name__ == "__main__":
     time_scale = time_scale()
     readFile = ReadFile(32, 24, 4, ("./data/ORG_32x24_dump-4.dat")).np_memcpy_bin()
+    ORG_32x24_dump = readFile.arr_dest
     ORG_32x24_dump_g = cv2.cvtColor(readFile.arr_dest, cv2.COLOR_RGBA2GRAY)
     ORG_32x24_dump_th = (ORG_32x24_dump_g)
-    ORG_32x24_dump_s1 = sol_bel(ORG_32x24_dump_g)
     # ta = plt.hist(ORG_32x24_dump_g.ravel(), 256)
 
     readFile = ReadFile(320, 240, 4, "./data/ARGB_320x240_dump-4.dat").np_memcpy_bin()
+    ARGB_320x240_dump = readFile.arr_dest
     ARGB_320x240_dump_g = cv2.cvtColor(readFile.arr_dest, cv2.COLOR_RGBA2GRAY)
     ARGB_320x240_dump_th = (ARGB_320x240_dump_g)
     # tb = plt.hist(ARGB_320x240_dump_g.ravel(), 256)
@@ -689,6 +690,9 @@ if __name__ == "__main__":
     YUYV_64x48_dump_g = cv2.cvtColor(YUYV_64x48_dump, cv2.COLOR_RGBA2GRAY)
     YUYV_64x48_dump_th = (YUYV_64x48_dump_g)
     time_scale.end("read")
+
+    ORG_32x24_dump_s1 = sol_bel(ORG_32x24_dump_g)
+    time_scale.end("sobel ORG_32x24_dump_s1")
     YUYV_64x48_dump_s1 = sol_bel(YUYV_64x48_dump_g)
     time_scale.end("sobel YUYV_64x48_dump_s1")
     ARGB_320x240_dump_s1 = sol_bel(ARGB_320x240_dump_g)
@@ -721,13 +725,18 @@ if __name__ == "__main__":
     # mat_plot("THRESH_OTSU", iThin, ARGB_320x240_dump_g - iThin, test_img, 1)
     # binary_oprator(iThin)
 
+    # TODO
     im = THRESH_OTSU(ARGB_320x240_dump_s1)
-    element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+    # im = THRESH_OTSU(ARGB_320x240_dump_g)
+    # im = ARGB_320x240_dump_g
+    cv2.imshow('im', im)
+    # TODO
 
     skel = np.zeros(im.shape, np.uint8)
     erode = np.zeros(im.shape, np.uint8)
     temp = np.zeros(im.shape, np.uint8)
 
+    element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
     i = 0
     while True:
         # cv2.imshow('im %d' % (i), im)
@@ -743,7 +752,7 @@ if __name__ == "__main__":
         if cv2.countNonZero(im) == 0:
             break
         i += 1
-    time_scale.end("Skeleton")
+    time_scale.end("Skeleton"+str(i))
     cv2.imshow('Skeleton', skel)
 
     pass
