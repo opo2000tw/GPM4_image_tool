@@ -8,7 +8,7 @@ OBJS    := $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SOURCE)))
   
 #target you can change test to what you want
 #目標文件名，輸入任意你想要的執行文件名
-TARGET  := test
+TARGET  := a.out
   
 #compile and lib parameter
 #編譯參數
