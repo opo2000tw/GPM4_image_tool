@@ -54,4 +54,9 @@
         "**/file_operations.c": false
     },
     "explorerExclude.backup": null,
+    // Controls whether inactive preprocessor blocks are colored differently than active code. This setting has no effect if IntelliSense is disabled or if using the Default High Contrast theme.
+    "C_Cpp.dimInactiveRegions": true,
+    "C_Cpp.inactiveRegionBackgroundColor": "",
+    "C_Cpp.inactiveRegionForegroundColor": "",
+    "C_Cpp.inactiveRegionOpacity": 0.55
 }
