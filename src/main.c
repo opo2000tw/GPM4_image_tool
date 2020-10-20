@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "../inc/sod.h"
-#include "../data/rgba320x240.h"
+#include "../inc/rgba320x240.h"
 
 #define YUYV 1
 #define VY1UY0 YUYV
