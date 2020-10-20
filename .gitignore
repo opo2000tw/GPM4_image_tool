@@ -43,4 +43,3 @@ pydevd*.log
 nodeLanguageServer/**
 nodeLanguageServer.*/**
 *.so
-SobelFilter

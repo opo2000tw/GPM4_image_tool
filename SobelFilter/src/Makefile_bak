@@ -1,0 +1,68 @@
+######################################
+# 生成靜態鏈接庫
+######################################
+
+#target you can change test to what you want
+#共享庫文件名，lib*.a
+TARGET  := libsobel.a
+
+#compile and lib parameter
+#編譯參數
+# CC      := gcc
+CC      := arm-none-eabi-gcc-4.9.3
+AR      := ar
+RANLIB  := arm-none-eabi-gcc-ranlib
+LIBS    :=
+LDFLAGS :=
+DEFINES := 
+    __FPU_PRESENT=1 \
+    ARM_MATH_CM4 \
+    DEBUG=1 \
+    ARMCM4_FP \
+    __CS_COMPILER__
+CPUFLAGS := \
+    -mcpu=cortex-m4 \
+    -mthumb 
+INCLUDE := -IInc
+CFLAGS  := -std=c99 -lm -Wall \
+    -g \
+    -O2 $(DEFINES) \
+    -mfpu=fpv4-sp-d16 \
+    -mfloat-abi=hard \
+    -fno-common \
+    -fdata-sections \
+    -ffunction-sections \
+    $(CPUFLAGS) \
+    $(INCLUDE) \
+
+#下面的基本上不需要做任何改動了
+
+#source file
+#源文件，自動找所有.c和.cpp文件，並將目標定義為同名.o文件
+SOURCE  := $(wildcard *.c) $(wildcard *.cpp)
+OBJS    := $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SOURCE)))
+TEST_SOURCE := $(filter-out main.c, $(SOURCE))
+TEST_SOURCE := $(filter-out main.cpp, $(SOURCE))
+TEST_OBJS    := $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(TEST_SOURCE)))
+
+.PHONY : everything objs clean veryclean rebuild
+
+everything : $(TARGET)
+
+all : 
+    # $(info VAR is $(SOURCE))
+    $(TARGET)
+
+objs : $(OBJS)
+
+rebuild: veryclean everything
+
+clean :
+    rm -fr *.so
+    rm -fr *.o
+    rm -fr *.a
+
+$(TARGET) : $(OBJS)
+    $(AR) cru $(TARGET) $(OBJS)
+    $(RANLIB) $(TARGET)
+    $(CC) $(CXXFLAGS) -o $@ $(TEST_OBJS) $(LDFLAGS) $(LIBS)
