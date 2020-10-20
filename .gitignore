@@ -43,7 +43,4 @@ pydevd*.log
 nodeLanguageServer/**
 nodeLanguageServer.*/**
 *.so
-
-garbage
-data
 SobelFilter
